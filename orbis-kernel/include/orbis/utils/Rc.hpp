@@ -7,12 +7,16 @@
 #include <utility>
 
 namespace orbis {
+
+template <typename T> using ptr = T *;
+
 // template <typename T, typename... Args> T *knew(Args &&...args);
 inline namespace utils {
 void kfree(void *ptr, std::size_t size);
 
 struct RcBase {
   std::atomic<unsigned> references{0};
+  ptr<void> _init_ptr = 0; // Set by knew/kcreate
   unsigned _total_size = 0; // Set by knew/kcreate
 
   virtual ~RcBase() = default;
@@ -30,7 +34,7 @@ struct RcBase {
     if (references.fetch_sub(1, std::memory_order::relaxed) == 1) {
       auto size = _total_size;
       this->~RcBase();
-      orbis::utils::kfree(this, size);
+      orbis::utils::kfree(_init_ptr, size);
       return true;
     }
 

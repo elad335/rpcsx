@@ -114,9 +114,10 @@ struct Module final {
 
   std::atomic<unsigned> references{0};
   unsigned _total_size = 0;
+  ptr<void> _init_ptr = nullptr;
 
   void incRef() {
-    if (_total_size != sizeof(Module))
+    if (_total_size != sizeof(Module) || _init_ptr != this)
       std::abort();
     if (references.fetch_add(1, std::memory_order::relaxed) > 512) {
       assert(!"too many references");
